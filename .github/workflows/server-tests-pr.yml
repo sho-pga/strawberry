@@ -1,0 +1,54 @@
+name: CI - Server tests (PR)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, AE/path-v01, AE/path-v01B]
+  workflow_dispatch: {}
+
+jobs:
+  server-tests:
+    name: Server tests (PR)
+    runs-on: ubuntu-latest
+    # JOBS_DB will be set in a setup step to a temp path via GITHUB_ENV
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure CI Environment and Dependencies
+        run: ./scripts/verify-ci-env.sh
+
+      - name: Install root deps
+        run: npm ci
+
+      - name: Install Chrome (for Puppeteer)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium
+
+      - name: Install server deps
+        run: npm --prefix server ci
+
+      - name: Run in-process smoke export verification (uses system Chrome)
+        env:
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+          CHROME_PATH: /usr/bin/google-chrome-stable
+        run: npm --prefix server run verify-export:inproc
+
+      - name: Set JOBS_DB temp path for tests
+        run: |
+          echo "JOBS_DB=${{ github.workspace }}/.tmp_ci_jobs.db" >> $GITHUB_ENV
+
+      - name: Run server tests (unit)
+        run: SKIP_PUPPETEER=true npm --prefix server test --silent
+
+      - name: Run server E2E worker test explicitly
+        run: npm --prefix server run test:run -- __tests__/e2e.worker.test.mjs
+
+      - name: Upload server logs (if present)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-tests-logs
+          path: server/logs/**

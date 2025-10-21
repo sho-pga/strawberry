@@ -1,0 +1,64 @@
+name: Verify export (in-process)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify-export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install server dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Ensure CI Environment and Dependencies
+        run: ./scripts/verify-ci-env.sh
+
+      - name: Run in-process export verification
+        working-directory: ./server
+        run: |
+          # Run the focused in-process export test (uses supertest; avoids network races)
+          npm --prefix server run test:run -- ./__tests__/export-binary.test.mjs --run
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-export-artifacts
+          path: server/test-artifacts
+
+  client-tests:
+    needs: verify-export
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (client)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install client dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Run client tests (Vitest)
+        working-directory: ./client
+        env:
+          CI: true
+        run: |
+          npm test --silent

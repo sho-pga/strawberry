@@ -1,0 +1,60 @@
+node_modules/
+data/aetherpress.db
+coverage/
+data/*.db
+
+# Local server test DB (keep out of commits)
+server/data/your-database-name.db
+
+# Generated content and samples
+samples/images/
+samples/*.pdf
+
+# Test/artifact outputs produced by headless e2e and smoke scripts
+test-artifacts/
+server/test-artifacts/
+client/test-artifacts/
+
+# Temporary files from Puppeteer and test runs
+client/tmp-puppeteer-*.cjs
+server/tmp-exports/
+
+# Server runtime files
+server/server.pid
+server/server*.log
+server/server-start.log
+
+# Temporary PDF output directories created by tests/smoke scripts
+# Ignore top-level and nested tmp-pdf* directories
+tmp-pdf*/
+**/tmp-pdf*/
+
+# Generated Vitest config files in shared package
+shared/dist/vitest.config.*
+
+# Next.js build output
+.next/
+/package-lock.json
+tmp/
+
+# Devcontainer local secrets (do NOT commit)
+.devcontainer/.env
+
+# Test and runtime logs
+run-*.log
+run-*.zip
+logs/
+samples/latest_prompt.txt
+
+# End-to-end test databases
+**/tmp-e2e.db
+
+# Temporary local export PDFs from smoke/inproc runs
+server/tmp-e2e-exports/
+# Ignore Vite build artifacts
+client/.vite/
+# Ignore generated Prisma client in dev environment
+server/prisma/prisma-client.js
+
+# Ignore server-generated prompt files and data directory
+server/data/

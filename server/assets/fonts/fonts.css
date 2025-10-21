@@ -1,0 +1,14 @@
+/* Local fonts loader for ebook renderer.
+   Drop your font files (woff/woff2) into this folder and update the @font-face below.
+   Example:
+
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('./LibreBaskerville-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+You can add bold/italic @font-face rules as needed. If this file is empty or missing, the renderer will fall back to 'Times New Roman'.
+*/

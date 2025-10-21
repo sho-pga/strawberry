@@ -1,0 +1,24 @@
+[
+  {
+    "poems": [
+      {
+        "title": "A Summer Day",
+        "author": "Public Domain",
+        "content": "The golden sun, the lazy breeze, the meadow hums with bees.",
+        "background": "summer1.svg"
+      },
+      {
+        "title": "Evening by the Lake",
+        "author": "Public Domain",
+        "content": "Soft ripples kiss the shore, shadows lengthen, and the swallows soar.",
+        "background": "summer2.svg"
+      },
+      {
+        "title": "Midsummer Night",
+        "author": "Public Domain",
+        "content": "Fireflies stitch the dusk with light; the world exhales into the night.",
+        "background": "summer1.svg"
+      }
+    ]
+  }
+]

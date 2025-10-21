@@ -1,0 +1,24 @@
+{
+  "extends": "../config/eslintrc.json",
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.d.ts"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "project": "./tsconfig.json",
+        "tsconfigRootDir": "."
+      },
+      "plugins": ["@typescript-eslint"],
+      "rules": {}
+    },
+    {
+      "files": ["*.d.ts"],
+      "rules": {
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": "off"
+      }
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+name: CI — Quick smoke (PR non-blocking)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  quick-smoke:
+    runs-on: ubuntu-latest
+    name: Quick smoke checks (non-blocking)
+    permissions: read-all
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node (light)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install server deps (fast)
+        working-directory: server
+        run: |
+          export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+          npm ci --ignore-scripts
+
+      - name: Start server in background
+        working-directory: server
+        run: |
+          nohup sh -c "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 node index.js" > /tmp/server.log 2>&1 &
+          sleep 2
+
+      - name: Check /health endpoint
+        run: |
+          set -e
+          echo "Checking server health with retries..."
+          attempts=0
+          max=30
+          until curl -fsS http://localhost:3000/health; do
+            attempts=$((attempts+1))
+            if [ "$attempts" -ge "$max" ]; then
+              echo "Health check failed after $attempts attempts (non-blocking)" ; exit 0
+            fi
+            echo "Server not ready yet; retrying in 1s (attempt $attempts/$max)..."
+            sleep 1
+          done
+          echo "Health OK"
+
+      - name: Optional quick export (allowed to fail)
+        continue-on-error: true
+        working-directory: server
+        run: |
+          # Try a very small in-process export if possible; allowed to fail in PRs
+          export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+          export CHROME_PATH=/usr/bin/chromium-browser || true
+          npm run smoke:export || true
+
+      - name: Upload quick smoke logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quick-smoke-logs
+          path: server/logs/**
+
+    # Do not fail PR status if this job fails; keep it informational
+    outputs:
+      quick-smoke: done

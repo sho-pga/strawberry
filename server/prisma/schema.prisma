@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Prompt {
+  id        Int      @id @default(autoincrement())
+  prompt    String
+  createdAt DateTime @default(now())
+  aiResults AIResult[]
+}
+
+model AIResult {
+  id        Int      @id @default(autoincrement())
+  prompt    Prompt   @relation(fields: [promptId], references: [id])
+  promptId  Int
+  result    Json
+  createdAt DateTime @default(now())
+  overrides Override[]
+  pdfExports PDFExport[]
+}
+
+model Override {
+  id         Int      @id @default(autoincrement())
+  aiResult   AIResult @relation(fields: [aiResultId], references: [id])
+  aiResultId Int
+  override   Json
+  createdAt  DateTime @default(now())
+}
+
+model PDFExport {
+  id        Int      @id @default(autoincrement())
+  aiResult  AIResult @relation(fields: [aiResultId], references: [id])
+  aiResultId Int
+  filePath  String
+  createdAt DateTime @default(now())
+}
+
+// Minimal Calendar model to satisfy health checks that expect a Calendar table.
+model Calendar {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+}

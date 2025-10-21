@@ -1,0 +1,61 @@
+name: CI Smoke Export (Chromium)
+
+on:
+  pull_request:
+    paths:
+      - "server/**"
+      - ".github/workflows/**"
+
+jobs:
+  verify-export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+      - name: Install server deps
+        run: |
+          export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+          npm ci --prefix server
+      - name: Run server smoke export verification (in-process)
+        env:
+          CHROME_PATH: /usr/bin/chromium-browser
+        run: npm --prefix server run verify-export:inproc
+
+      - name: Dump debug info (on failure)
+        if: failure()
+        run: |
+          echo "--- ENV ---"
+          env | sort
+          echo "--- /tmp listing ---"
+          ls -la /tmp || true
+          echo "--- workspace server listing ---"
+          ls -la "$GITHUB_WORKSPACE/server" || true
+          echo "--- server/test-artifacts listing ---"
+          ls -la "$GITHUB_WORKSPACE/server/test-artifacts" || true
+          echo "--- server logs (tail) ---"
+          if [ -d "$GITHUB_WORKSPACE/server/logs" ]; then
+            for f in "$GITHUB_WORKSPACE"/server/logs/*; do
+              echo "--- file: $f ---"; sed -n '1,200p' "$f" || true
+            done
+          fi
+          echo "--- /tmp/server.log (if present) ---"
+          if [ -f /tmp/server.log ]; then tail -n +1 /tmp/server.log || true; fi
+
+      - name: Upload smoke-export artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-export-artifacts
+          path: |
+            server/test-artifacts/**
+            server/logs/**
+            /tmp/*.pdf
+            /tmp/*automated_export_*.pdf
+            /tmp/*export*.pdf

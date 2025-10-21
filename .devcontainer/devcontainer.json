@@ -1,0 +1,105 @@
+{
+  "name": "AetherPress v0.1 (Alpha)",
+
+  // --- DOCKER COMPOSE INTEGRATION ---
+  // Point to your docker-compose.yml file
+  "dockerComposeFile": "docker-compose.yml",
+
+  // Specify which service in the docker-compose file is the dev container
+  "service": "app",
+
+  // The workspace folder inside the container
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  // --- LIFECYCLE HOOKS ---
+  // Wait for the postCreateCommand to complete before allowing connection.
+  "waitFor": "onCreateCommand",
+
+  // Install dependencies in all workspaces (server, shared, client)
+  //"postCreateCommand": "cd client && npm install && cd ../server && npm install express puppeteer && npm install --save-dev nodemon && cd ..",
+
+  "updateContentCommand": "cd client && npm install && npx playwright install --with-deps || true && cd ../server && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 npm install && npm install --save-dev nodemon && cd ..",
+
+  "postCreateCommand": "cd client && npm install && npx playwright install --with-deps || true && cd ../server && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 npm install && cd .. && npm install -g concurrently",
+
+  "postAttachCommand": {
+    "client + server": "concurrently 'cd ./client && npm run dev' 'cd ./server && npm run dev'"
+    //x "client + server": "bash ./start-app.sh"
+  },
+
+  // --- VS CODE CUSTOMIZATIONS ---
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["server/index.js", "client/src/index.js"]
+    },
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "svelte.svelte-vscode",
+        "github.copilot",
+        "github.copilot-chat",
+        "github.vscode-github-actions",
+        "ms-azuretools.vscode-docker",
+        "dsznajder.es7-react-js-snippets",
+        "bradlc.vscode-tailwindcss",
+        "prisma.prisma",
+        "ms-azuretools.vscode-postgresql",
+        "vscode-icons-team.vscode-icons"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "workbench.iconTheme": "vscode-icons",
+        "github.copilot.enable": {
+          "*": true,
+          "plaintext": false,
+          "markdown": true,
+          "scminput": false
+        },
+        // Codespaces/Remote port-forwarding: make behavior deterministic for all developers.
+        // Turn off fully automatic port detection and rely on the explicit `forwardPorts` list.
+        "remote.ports.autoForward": "off",
+        "remote.ports.defaultForwardingMethod": "manual"
+      }
+    }
+  },
+
+  // --- PORT FORWARDING ---
+  "forwardPorts": [5173, 3000, 5432],
+  "portsAttributes": {
+    "5173": {
+      "label": "client (Vite/Svelte)",
+      "onAutoForward": "openPreview"
+    },
+    "3000": { "label": "server (Express/Node.js)" },
+    "5432": { "label": "database (PostgreSQL)" }
+  },
+
+  // --- GENERAL SETTINGS ---
+  "remoteEnv": {
+    "DATABASE_URL": "postgresql://${localEnv:POSTGRES_USER}:${localEnv:POSTGRES_PASSWORD}@db:5432/${localEnv:POSTGRES_DB}",
+
+    "GEMINI_API_URL": "${localEnv:GEMINI_API_URL}",
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    "GEMINI_VISION_API_URL": "${localEnv:GEMINI_VISION_API_URL}",
+
+    "DEV_AUTH_TOKEN": "${localEnv:DEV_AUTH_TOKEN}",
+
+    "CLOUDFLARE_ACCOUNT_ID": "${localEnv:CLOUDFLARE_ACCOUNT_ID}",
+    "CLOUDFLARE_API_TOKEN": "${localEnv:CLOUDFLARE_API_TOKEN}",
+    "CHROME_PATH": "/usr/bin/google-chrome-stable",
+    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true"
+  },
+  "remoteUser": "node",
+  "hostRequirements": {
+    "cpus": 4
+  }
+}

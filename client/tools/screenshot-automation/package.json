@@ -1,0 +1,12 @@
+{
+  "name": "@aetherpress/client-screenshots",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "probe": "node probe-selectors.cjs",
+    "capture": "node screenshot-capture.cjs"
+  },
+  "dependencies": {
+    "puppeteer-core": "^20.0.0"
+  }
+}

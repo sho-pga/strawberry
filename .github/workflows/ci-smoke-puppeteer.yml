@@ -1,0 +1,53 @@
+name: CI — Puppeteer smoke export (full export, gated)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  schedule:
+    # Run nightly to validate full export in a stable environment
+    - cron: "0 3 * * *"
+
+jobs:
+  smoke-puppeteer:
+    name: Puppeteer full smoke export (gated)
+    runs-on: ubuntu-latest
+    permissions: read-all
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Ensure CI Environment and Dependencies
+        run: ./scripts/verify-ci-env.sh
+
+      - name: Install server deps
+        working-directory: server
+        run: npm ci
+
+      - name: Run Puppeteer smoke export
+        working-directory: server
+        run: |
+          # Fail if the smoke export fails. This job is intentionally strict so CI reflects export regressions.
+          npm run smoke:export
+
+      - name: Upload generated PDF (if present)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: puppeteer-smoke-pdf
+          path: samples/puppeteer_smoke_test.pdf
+
+      - name: Upload server logs (if present)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: puppeteer-smoke-logs
+          path: server/logs/**
+
+  # This job is stricter: failures will make the job fail so regressions are visible in CI.
